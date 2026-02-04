@@ -8,6 +8,7 @@ import {
   BarChart3
 } from 'lucide-react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
@@ -18,6 +19,8 @@ export default function LoginPage() {
     password: ''
   })
   const [errors, setErrors] = useState({})
+  const router = useRouter();
+
 
   const validateForm = () => {
     const newErrors = {}
@@ -30,9 +33,7 @@ export default function LoginPage() {
     
     if (!formData.password) {
       newErrors.password = 'Password wajib diisi'
-    } else if (formData.password.length < 6) {
-      newErrors.password = 'Password minimal 6 karakter'
-    }
+    } 
     
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -45,13 +46,19 @@ export default function LoginPage() {
     
     setIsLoading(true)
     
-    // Simulasi proses login
-    setTimeout(() => {
-      console.log('Login data:', formData)
-      setIsLoading(false)
-      // Redirect ke dashboard setelah login berhasil
-      // router.push('/dashboard')
-    }, 1500)
+    const res = await fetch('http://localhost:5000/api/auth/login', {
+      method : 'POST',
+      headers: {'Content-type' : 'application/json'},
+      body : JSON.stringify(formData),
+      credentials: 'include'
+    });
+
+    if(res.ok) {
+      alert('Login sukses');
+      router.push('/admin/dashboard');
+    } else {
+      alert('login gagal');
+    }
   }
 
   const handleInputChange = (e) => {
