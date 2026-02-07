@@ -94,7 +94,7 @@ export default function ManageEvents() {
           </button>
           
           <Link
-            href="/dashboard/events/create"
+            href="/admin/events/create"
             className="flex items-center px-4 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300"
           >
             <Plus className="w-5 h-5 mr-2" />

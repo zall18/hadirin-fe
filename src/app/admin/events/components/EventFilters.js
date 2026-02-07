@@ -2,7 +2,7 @@
 
 import { Search, Filter } from 'lucide-react'
 
-export default function EventFilters({ 
+export default function   EventFilters({ 
   searchTerm, 
   onSearchChange, 
   filterActive, 

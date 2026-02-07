@@ -17,7 +17,7 @@ const menuItems = [
   { 
     icon: Home, 
     label: 'Dashboard', 
-    href: '/dashboard', 
+    href: '/admin/dashboard', 
     count: null,
     color: 'text-blue-500',
     bgColor: 'bg-blue-50'
@@ -25,7 +25,7 @@ const menuItems = [
   { 
     icon: Calendar, 
     label: 'Events', 
-    href: '/dashboard/events', 
+    href: '/admin/events', 
     count: 24,
     color: 'text-emerald-500',
     bgColor: 'bg-emerald-50'
