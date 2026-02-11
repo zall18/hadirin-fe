@@ -4,8 +4,6 @@ import { useState, useEffect, useCallback } from 'react'
 import { Filter, Plus, Heart, Calendar, Users, Gift } from 'lucide-react'
 import Link from 'next/link'
 import { eventsApi } from './api/events'
-import EventStats from './components/EventStats'
-import EventFilters from './components/EventFilters'
 import EventsTable from './components/EventsTable'
 import Pagination from './components/Pagination'
 import DeleteModal from './components/DeleteModal'
@@ -39,6 +37,7 @@ export default function ManageWeddings() {
       }
       
       const response = await eventsApi.getEvents(params)
+      console.log(response.data);
       setEvents(response.data)
       setPagination({
         total: response.total,
@@ -68,10 +67,12 @@ export default function ManageWeddings() {
     if (!selectedEvent) return
     
     try {
-      await eventsApi.deleteEvent(selectedEvent.id)
-      setShowDeleteModal(false)
-      setSelectedEvent(null)
-      fetchEvents() // Refresh data
+      const deleteEvent = await eventsApi.deleteEvent(selectedEvent.id)
+      if(deleteEvent == 200) {
+        setShowDeleteModal(false)
+        setSelectedEvent(null)
+        fetchEvents() // Refresh data
+      }
     } catch (error) {
       console.error('Error deleting event:', error)
     }

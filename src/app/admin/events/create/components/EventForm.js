@@ -2,718 +2,827 @@
 
 import { useState, useEffect } from 'react'
 import { 
-  Calendar, MapPin, 
-  Users, 
-  Tag,
-  Heart,
-  Cake,
-  Music,
-  Camera,
-  Bell,
+  Heart, 
+  Calendar, 
+  MapPin, 
+  Clock, 
+  Globe, 
   Lock,
-  Eye,
-  TrendingUp,
-  Gift,
-  Flower2,
-  Gem
+  Camera,
+  Send,
+  Users,
+  Palette,
+  Image as ImageIcon,
+  Upload,
+  Map,
+  CheckCircle,
+  Info,
+  Sparkles,
+  Building,
+  Home,
+  TreePine,
+  Umbrella,
+  Church,
+  Mosque
 } from 'lucide-react'
 import ColorPicker from './ColorPicker'
 import DateTimePicker from './DateTimePicker'
 
-// Preset warna untuk tema pernikahan
-const weddingColorPresets = [
-  { name: 'Pink Romantic', value: '#F472B6' },
-  { name: 'Purple Elegant', value: '#8B5CF6' },
-  { name: 'Gold Luxury', value: '#F59E0B' },
-  { name: 'Green Fresh', value: '#10B981' },
-  { name: 'Blue Serene', value: '#3B82F6' },
-  { name: 'Coral Warm', value: '#FB7185' },
-  { name: 'Lavender Soft', value: '#A78BFA' },
-  { name: 'Navy Classic', value: '#1E40AF' },
-  { name: 'Blush Pink', value: '#FDA4AF' },
-  { name: 'Mint Fresh', value: '#34D399' },
-  { name: 'Warm Beige', value: '#D97706' },
-  { name: 'Custom', value: 'custom' },
+// Constants sesuai dengan Prisma schema
+export const VENUE_TYPES = [
+  { value: 'BALLROOM', label: 'Ballroom', icon: '🏨', description: 'Hotel mewah dengan ballroom' },
+  { value: 'HOTEL', label: 'Hotel', icon: '🏨', description: 'Hotel bintang 4-5' },
+  { value: 'GARDEN', label: 'Taman', icon: '🌳', description: 'Outdoor garden' },
+  { value: 'BEACH', label: 'Pantai', icon: '🏖️', description: 'Resepsi di tepi pantai' },
+  { value: 'CHURCH', label: 'Gereja', icon: '⛪', description: 'Gedung gereja' },
+  { value: 'MOSQUE', label: 'Masjid', icon: '🕌', description: 'Gedung masjid' },
+  { value: 'HOUSE', label: 'Rumah', icon: '🏠', description: 'Kediaman pribadi' },
+  { value: 'VILLA', label: 'Villa', icon: '🏡', description: 'Villa pribadi' },
+  { value: 'GEDUNG', label: 'Gedung', icon: '🏛️', description: 'Gedung serbaguna' },
+]
+
+export const INVITATION_TYPES = [
+  { 
+    value: 'PUBLIC', 
+    label: 'Undangan Publik', 
+    icon: Globe, 
+    description: 'Semua tamu bisa mengakses undangan' 
+  },
+  { 
+    value: 'PRIVATE', 
+    label: 'Undangan Privat', 
+    icon: Lock, 
+    description: 'Hanya tamu undangan khusus' 
+  },
 ]
 
 export default function EventForm({ 
-  initialData = {}, 
-  onSubmit,
-  loading = false 
+  activeStep = 0,
+  formData = {}, 
+  setFormData, 
+  onSubmit, 
+  loading = false,
+  onNext,
+  onPrevious
 }) {
-  const [formData, setFormData] = useState({
-    name: '',
-    slug: '',
-    date: new Date().toISOString(),
-    location: '',
-    themeColor: '#F472B6', // Pink default untuk wedding
-    description: '',
-    isActive: true,
-    maxGuests: 150,
-    isPublic: true,
-    brideName: '',
-    groomName: '',
-    venueType: 'hotel',
-    enablePhotoBooth: true,
-    enableGiftRegistry: true,
-    enableGuestbook: true,
-    enableMusicRequest: true,
-    ...initialData
-  })
-
-  const [errors, setErrors] = useState({})
-
-  // Generate slug otomatis dari nama
-  useEffect(() => {
-    if (formData.name && !formData.slug) {
-      const generatedSlug = formData.name
-        .toLowerCase()
-        .replace(/[^\w\s]/gi, '')
-        .replace(/\s+/g, '-')
-        .substring(0, 50)
-      setFormData(prev => ({ ...prev, slug: generatedSlug }))
-    }
-  }, [formData.name])
-
-  // Auto-generate wedding name jika ada nama pengantin
-  useEffect(() => {
-    if (formData.brideName && formData.groomName && !formData.name) {
-      const weddingName = `Pernikahan ${formData.brideName} & ${formData.groomName}`
-      setFormData(prev => ({ 
-        ...prev, 
-        name: weddingName,
-        slug: weddingName
-          .toLowerCase()
-          .replace(/[^\w\s]/gi, '')
-          .replace(/\s+/g, '-')
-          .substring(0, 50)
-      }))
-    }
-  }, [formData.brideName, formData.groomName])
-
+  
   const handleChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }))
-    
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: '' }))
+    setFormData((prev) => ({ ...prev, [field]: value }))
+  }
+
+  const handleImageUpload = (field, e) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      const imageUrl = URL.createObjectURL(file)
+      handleChange(field, imageUrl)
     }
   }
 
-  const validateForm = () => {
-    const newErrors = {}
-    
-    if (!formData.name.trim()) {
-      newErrors.name = 'Nama pernikahan wajib diisi'
-    } else if (formData.name.length < 3) {
-      newErrors.name = 'Nama pernikahan minimal 3 karakter'
-    }
-    
-    if (!formData.slug.trim()) {
-      newErrors.slug = 'Slug wajib diisi'
-    } else if (!/^[a-z0-9-]+$/.test(formData.slug)) {
-      newErrors.slug = 'Slug hanya boleh mengandung huruf kecil, angka, dan strip'
-    }
-    
-    if (!formData.location.trim()) {
-      newErrors.location = 'Lokasi wajib diisi'
-    }
-    
-    if (!formData.date || new Date(formData.date) < new Date()) {
-      newErrors.date = 'Tanggal harus di masa depan'
-    }
-    
-    if (!formData.brideName.trim()) {
-      newErrors.brideName = 'Nama pengantin wanita wajib diisi'
-    }
-    
-    if (!formData.groomName.trim()) {
-      newErrors.groomName = 'Nama pengantin pria wajib diisi'
-    }
-    
-    if (formData.maxGuests < 1) {
-      newErrors.maxGuests = 'Jumlah tamu minimal 1'
-    }
-    
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
+  // Default values sesuai dengan Prisma schema
+  const defaultFormData = {
+    groomName: '',
+    brideName: '',
+    weddingTitle: '',
+    date: '',
+    startTime: '',
+    endTime: '',
+    venueName: '',
+    venueType: 'BALLROOM',
+    address: '',
+    googleMapsUrl: '',
+    primaryColor: '#7C3AED', // Purple Royal
+    logoUrl: '',
+    coverImageUrl: '',
+    invitationType: 'PRIVATE',
+    isActive: false,
+    isPublished: false,
+    allowPhotoOnCheckIn: true,
+    autoSendPhotoToWA: true,
+    enableRSVP: true,
+    showLiveCount: true,
+    ...formData
   }
 
-  const handleSubmit = (e) => {
-    e.preventDefault()
-    if (validateForm()) {
-      onSubmit(formData)
+  const currentFormData = { ...defaultFormData, ...formData }
+
+  // Auto-generate wedding title
+  useEffect(() => {
+    if (currentFormData.groomName && currentFormData.brideName && !currentFormData.weddingTitle) {
+      const title = `The Wedding of ${currentFormData.groomName} & ${currentFormData.brideName}`
+      handleChange('weddingTitle', title)
+    }
+  }, [currentFormData.groomName, currentFormData.brideName])
+
+  // Validate current step
+  const validateStep = () => {
+    switch(activeStep) {
+      case 0: // Step 1: Bride & Groom
+        return currentFormData.groomName && currentFormData.brideName
+      case 1: // Step 2: Date & Venue
+        return currentFormData.date && currentFormData.venueName
+      case 2: // Step 3: Theme & Features
+        return true // Optional fields
+      case 3: // Step 4: Review
+        return true
+      default:
+        return false
     }
   }
 
-  const venueTypes = [
-    { value: 'hotel', label: 'Hotel', icon: '🏨' },
-    { value: 'gedung', label: 'Gedung Serbaguna', icon: '🏛️' },
-    { value: 'rumah', label: 'Rumah', icon: '🏠' },
-    { value: 'villa', label: 'Villa', icon: '🏡' },
-    { value: 'garden', label: 'Taman/Garden', icon: '🌳' },
-    { value: 'beach', label: 'Pantai', icon: '🏖️' },
-    { value: 'church', label: 'Gereja', icon: '⛪' },
-    { value: 'mosque', label: 'Masjid', icon: '🕌' },
-  ]
+  const isValid = validateStep()
 
-  return (
-    <form onSubmit={handleSubmit} className="space-y-8">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left Column - Basic Info */}
-        <div className="lg:col-span-2 space-y-8">
-          {/* Pengantin Info */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center mb-6">
-              <div className="w-10 h-10 rounded-lg bg-pink-50 flex items-center justify-center mr-4">
-                <Heart className="w-5 h-5 text-pink-500" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-gray-800">Informasi Pengantin</h3>
-                <p className="text-sm text-gray-500">Data mempelai wanita dan pria</p>
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Nama Pengantin Wanita *
-                </label>
-                <div className="relative">
-                  <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-pink-500">
-                    👰
-                  </div>
-                  <input
-                    type="text"
-                    value={formData.brideName}
-                    onChange={(e) => handleChange('brideName', e.target.value)}
-                    className={`w-full pl-10 pr-3 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-all duration-300 ${
-                      errors.brideName ? 'border-red-300' : 'border-gray-300'
-                    }`}
-                    placeholder="Nama lengkap pengantin wanita"
-                  />
-                </div>
-                {errors.brideName && (
-                  <p className="mt-2 text-sm text-red-600">{errors.brideName}</p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Nama Pengantin Pria *
-                </label>
-                <div className="relative">
-                  <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-500">
-                    🤵
-                  </div>
-                  <input
-                    type="text"
-                    value={formData.groomName}
-                    onChange={(e) => handleChange('groomName', e.target.value)}
-                    className={`w-full pl-10 pr-3 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 ${
-                      errors.groomName ? 'border-red-300' : 'border-gray-300'
-                    }`}
-                    placeholder="Nama lengkap pengantin pria"
-                  />
-                </div>
-                {errors.groomName && (
-                  <p className="mt-2 text-sm text-red-600">{errors.groomName}</p>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Wedding Details */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center mb-6">
-              <div className="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center mr-4">
-                <Gem className="w-5 h-5 text-purple-500" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-gray-800">Detail Pernikahan</h3>
-                <p className="text-sm text-gray-500">Informasi lengkap pernikahan</p>
-              </div>
-            </div>
-            
-            <div className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Nama Acara Pernikahan *
-                </label>
-                <input
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) => handleChange('name', e.target.value)}
-                  className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 ${
-                    errors.name ? 'border-red-300' : 'border-gray-300'
-                  }`}
-                  placeholder="Contoh: Pernikahan Annisa & Rizki"
-                  maxLength={100}
-                />
-                {errors.name && (
-                  <p className="mt-2 text-sm text-red-600">{errors.name}</p>
-                )}
-                <div className="flex items-center justify-between mt-2">
-                  <span className="text-xs text-gray-500">
-                    {formData.name.length}/100 karakter
-                  </span>
-                  <span className="text-xs text-blue-500">Akan otomatis generate dari nama pengantin</span>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Slug URL *
-                </label>
-                <div className="flex items-center">
-                  <span className="px-3 py-3 bg-gray-100 border border-r-0 border-gray-300 rounded-l-xl text-gray-500">
-                    /wedding/
-                  </span>
-                  <input
-                    type="text"
-                    value={formData.slug}
-                    onChange={(e) => handleChange('slug', e.target.value)}
-                    className={`flex-1 px-4 py-3 border rounded-r-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 ${
-                      errors.slug ? 'border-red-300' : 'border-gray-300'
-                    }`}
-                    placeholder="pernikahan-annisa-rizki"
-                    readOnly
-                  />
-                </div>
-                {errors.slug && (
-                  <p className="mt-2 text-sm text-red-600">{errors.slug}</p>
-                )}
-                <p className="text-xs text-gray-500 mt-2">
-                  URL otomatis: https://anda.domain/wedding/{formData.slug}
-                </p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Deskripsi Pernikahan
-                </label>
-                <textarea
-                  value={formData.description}
-                  onChange={(e) => handleChange('description', e.target.value)}
-                  rows={3}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300"
-                  placeholder="Ceritakan kisah cinta kalian atau pesan khusus untuk tamu undangan..."
-                  maxLength={300}
-                />
-                <div className="flex items-center justify-between mt-2">
-                  <span className="text-xs text-gray-500">
-                    {formData.description.length}/300 karakter
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Date & Location */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center mb-6">
-              <div className="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center mr-4">
-                <Calendar className="w-5 h-5 text-green-500" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-gray-800">Waktu & Lokasi</h3>
-                <p className="text-sm text-gray-500">Jadwal dan tempat pernikahan</p>
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <DateTimePicker
-                value={formData.date}
-                onChange={(value) => handleChange('date', value)}
-              />
-
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Jenis Venue
-                  </label>
-                  <select
-                    value={formData.venueType}
-                    onChange={(e) => handleChange('venueType', e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    {venueTypes.map((venue) => (
-                      <option key={venue.value} value={venue.value}>
-                        {venue.icon} {venue.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Alamat Lengkap *
-                  </label>
-                  <div className="relative">
-                    <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                    <input
-                      type="text"
-                      value={formData.location}
-                      onChange={(e) => handleChange('location', e.target.value)}
-                      className={`w-full pl-10 pr-3 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 ${
-                        errors.location ? 'border-red-300' : 'border-gray-300'
-                      }`}
-                      placeholder="Contoh: Grand Ballroom Hotel Mulia, Jl. Gatot Subroto No.1, Jakarta"
-                    />
-                  </div>
-                  {errors.location && (
-                    <p className="mt-2 text-sm text-red-600">{errors.location}</p>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Guest Settings */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center mb-6">
-              <div className="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center mr-4">
-                <Users className="w-5 h-5 text-amber-500" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-gray-800">Pengaturan Tamu</h3>
-                <p className="text-sm text-gray-500">Atur kapasitas dan sistem RSVP</p>
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Maksimal Tamu Undangan *
-                </label>
-                <div className="relative">
-                  <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                  <input
-                    type="number"
-                    value={formData.maxGuests}
-                    onChange={(e) => handleChange('maxGuests', parseInt(e.target.value) || 1)}
-                    min="1"
-                    max="5000"
-                    className={`w-full pl-10 pr-3 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 ${
-                      errors.maxGuests ? 'border-red-300' : 'border-gray-300'
-                    }`}
-                  />
-                </div>
-                {errors.maxGuests && (
-                  <p className="mt-2 text-sm text-red-600">{errors.maxGuests}</p>
-                )}
-                <p className="text-xs text-gray-500 mt-2">
-                  Kapasitas ideal: 150-250 tamu untuk pernikahan
-                </p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Tipe Undangan
-                </label>
-                <div className="space-y-3">
-                  <label className="flex items-center p-3 border border-gray-300 rounded-xl hover:border-blue-300 cursor-pointer transition-all duration-300">
-                    <input
-                      type="radio"
-                      name="accessType"
-                      checked={formData.isPublic}
-                      onChange={() => handleChange('isPublic', true)}
-                      className="w-4 h-4 text-blue-600"
-                    />
-                    <div className="ml-3">
-                      <div className="flex items-center">
-                        <Eye className="w-4 h-4 text-green-500 mr-2" />
-                        <span className="font-medium text-gray-800">Publik</span>
-                      </div>
-                      <p className="text-sm text-gray-500">Semua tamu bisa lihat detail</p>
-                    </div>
-                  </label>
-
-                  <label className="flex items-center p-3 border border-gray-300 rounded-xl hover:border-blue-300 cursor-pointer transition-all duration-300">
-                    <input
-                      type="radio"
-                      name="accessType"
-                      checked={!formData.isPublic}
-                      onChange={() => handleChange('isPublic', false)}
-                      className="w-4 h-4 text-blue-600"
-                    />
-                    <div className="ml-3">
-                      <div className="flex items-center">
-                        <Lock className="w-4 h-4 text-amber-500 mr-2" />
-                        <span className="font-medium text-gray-800">Privat</span>
-                      </div>
-                      <p className="text-sm text-gray-500">Hanya tamu undangan khusus</p>
-                    </div>
-                  </label>
-                </div>
-              </div>
-            </div>
+  // STEP 1: Bride & Groom Information
+  if (activeStep === 0) {
+    return (
+      <form onSubmit={(e) => { e.preventDefault(); onSubmit(currentFormData) }} className="space-y-8">
+        {/* Hero Section */}
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-pink-500 via-pink-600 to-purple-600 p-8 mb-8">
+          <div className="absolute inset-0 bg-white/10 backdrop-blur-sm"></div>
+          <div className="absolute -top-6 -right-6 w-32 h-32 bg-white/20 rounded-full"></div>
+          <div className="absolute -bottom-6 -left-6 w-32 h-32 bg-white/20 rounded-full"></div>
+          
+          <div className="relative text-center text-white">
+            <Heart className="w-16 h-16 mx-auto mb-4" fill="white" />
+            <h2 className="text-3xl font-bold mb-2">Mulai Cerita Cinta Anda</h2>
+            <p className="text-white/90 text-lg">Isi data pengantin untuk memulai undangan digital</p>
           </div>
         </div>
 
-        {/* Right Column - Settings & Preview */}
-        <div className="space-y-8">
-          {/* Wedding Theme Color */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center mb-6">
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-pink-50 to-purple-50 flex items-center justify-center mr-4">
-                <Flower2 className="w-5 h-5 text-pink-500" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-gray-800">Warna Tema Pernikahan</h3>
-                <p className="text-sm text-gray-500">Pilih warna untuk tema undangan</p>
-              </div>
+        {/* Wedding Title Preview */}
+        <div className="bg-gradient-to-r from-pink-50 to-purple-50 p-6 rounded-xl border-2 border-pink-200 mb-6">
+          <div className="flex items-start">
+            <div className="w-12 h-12 rounded-full bg-pink-100 flex items-center justify-center mr-4">
+              <Sparkles className="w-6 h-6 text-pink-600" />
             </div>
-            
-            <div className="space-y-4">
-              {/* Preview Color */}
-              <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-xl">
-                <div 
-                  className="w-12 h-12 rounded-xl border border-gray-200"
-                  style={{ backgroundColor: formData.themeColor }}
-                />
-                <div>
-                  <div className="font-medium text-gray-800" style={{ color: formData.themeColor }}>
-                    {formData.themeColor}
-                  </div>
-                  <div className="text-sm text-gray-500">Warna tema utama</div>
-                </div>
-              </div>
-
-              {/* Wedding Color Presets */}
-              <div>
-                <h4 className="text-sm font-medium text-gray-700 mb-3">Warna Pernikahan Populer:</h4>
-                <div className="grid grid-cols-4 gap-2">
-                  {weddingColorPresets.slice(0, 8).map((color) => (
-                    color.value !== 'custom' && (
-                      <button
-                        key={color.value}
-                        type="button"
-                        onClick={() => handleChange('themeColor', color.value)}
-                        className={`
-                          relative p-2 rounded-lg transition-all duration-200 hover:scale-105
-                          ${formData.themeColor === color.value 
-                            ? 'ring-2 ring-offset-2 ring-blue-500' 
-                            : ''
-                          }
-                        `}
-                        style={{ backgroundColor: color.value }}
-                        title={color.name}
-                      >
-                        {formData.themeColor === color.value && (
-                          <div className="absolute -top-1 -right-1 w-5 h-5 bg-white rounded-full flex items-center justify-center shadow">
-                            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: color.value }}></div>
-                          </div>
-                        )}
-                      </button>
-                    )
-                  ))}
-                </div>
-              </div>
-
-              {/* Custom Color */}
-              <div className="p-4 bg-gray-50 rounded-xl">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Pilih Warna Custom
-                </label>
-                <div className="flex items-center space-x-4">
-                  <input
-                    type="color"
-                    value={formData.themeColor}
-                    onChange={(e) => handleChange('themeColor', e.target.value)}
-                    className="w-12 h-12 cursor-pointer rounded-lg border border-gray-300"
-                  />
-                  <input
-                    type="text"
-                    value={formData.themeColor}
-                    onChange={(e) => handleChange('themeColor', e.target.value)}
-                    placeholder="#F472B6"
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Wedding Features */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center mb-6">
-              <div className="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center mr-4">
-                <Gift className="w-5 h-5 text-indigo-500" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-gray-800">Fitur Pernikahan</h3>
-                <p className="text-sm text-gray-500">Aktifkan fitur untuk tamu</p>
-              </div>
-            </div>
-            
-            <div className="space-y-4">
-              <label className="flex items-center justify-between p-3 border border-gray-300 rounded-xl hover:border-pink-300 cursor-pointer transition-all duration-300">
-                <div className="flex items-center">
-                  <Camera className="w-4 h-4 text-pink-500 mr-3" />
-                  <div>
-                    <span className="font-medium text-gray-800">Foto Booth</span>
-                    <p className="text-sm text-gray-500">Tamu bisa foto langsung</p>
-                  </div>
-                </div>
-                <input
-                  type="checkbox"
-                  checked={formData.enablePhotoBooth}
-                  onChange={(e) => handleChange('enablePhotoBooth', e.target.checked)}
-                  className="w-4 h-4 text-pink-600 rounded focus:ring-pink-500"
-                />
-              </label>
-
-              <label className="flex items-center justify-between p-3 border border-gray-300 rounded-xl hover:border-purple-300 cursor-pointer transition-all duration-300">
-                <div className="flex items-center">
-                  <Gift className="w-4 h-4 text-purple-500 mr-3" />
-                  <div>
-                    <span className="font-medium text-gray-800">Registrasi Hadiah</span>
-                    <p className="text-sm text-gray-500">Tamu bisa pilih hadiah</p>
-                  </div>
-                </div>
-                <input
-                  type="checkbox"
-                  checked={formData.enableGiftRegistry}
-                  onChange={(e) => handleChange('enableGiftRegistry', e.target.checked)}
-                  className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500"
-                />
-              </label>
-
-              <label className="flex items-center justify-between p-3 border border-gray-300 rounded-xl hover:border-blue-300 cursor-pointer transition-all duration-300">
-                <div className="flex items-center">
-                  <Bell className="w-4 h-4 text-blue-500 mr-3" />
-                  <div>
-                    <span className="font-medium text-gray-800">Buku Tamu Digital</span>
-                    <p className="text-sm text-gray-500">Ucapan dan doa dari tamu</p>
-                  </div>
-                </div>
-                <input
-                  type="checkbox"
-                  checked={formData.enableGuestbook}
-                  onChange={(e) => handleChange('enableGuestbook', e.target.checked)}
-                  className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
-                />
-              </label>
-
-              <label className="flex items-center justify-between p-3 border border-gray-300 rounded-xl hover:border-green-300 cursor-pointer transition-all duration-300">
-                <div className="flex items-center">
-                  <Music className="w-4 h-4 text-green-500 mr-3" />
-                  <div>
-                    <span className="font-medium text-gray-800">Request Musik</span>
-                    <p className="text-sm text-gray-500">Tamu bisa request lagu</p>
-                  </div>
-                </div>
-                <input
-                  type="checkbox"
-                  checked={formData.enableMusicRequest}
-                  onChange={(e) => handleChange('enableMusicRequest', e.target.checked)}
-                  className="w-4 h-4 text-green-600 rounded focus:ring-green-500"
-                />
-              </label>
-
-              <label className="flex items-center justify-between p-3 border border-gray-300 rounded-xl hover:border-amber-300 cursor-pointer transition-all duration-300">
-                <div className="flex items-center">
-                  <Cake className="w-4 h-4 text-amber-500 mr-3" />
-                  <div>
-                    <span className="font-medium text-gray-800">Aktifkan Acara</span>
-                    <p className="text-sm text-gray-500">Tampilkan di daftar pernikahan</p>
-                  </div>
-                </div>
-                <input
-                  type="checkbox"
-                  checked={formData.isActive}
-                  onChange={(e) => handleChange('isActive', e.target.checked)}
-                  className="w-4 h-4 text-amber-600 rounded focus:ring-amber-500"
-                />
-              </label>
-            </div>
-          </div>
-
-          {/* Live Preview */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h3 className="font-semibold text-gray-800 mb-4">Preview Undangan</h3>
-            <div 
-              className="rounded-xl p-5 border-2 border-gray-200 relative overflow-hidden"
-              style={{ borderColor: formData.themeColor }}
-            >
-              {/* Decorative elements */}
-              <div className="absolute top-0 right-0 w-16 h-16 opacity-10" 
-                style={{ backgroundColor: formData.themeColor }}></div>
-              <div className="absolute bottom-0 left-0 w-12 h-12 opacity-10" 
-                style={{ backgroundColor: formData.themeColor }}></div>
-              
-              <div className="relative">
-                <div className="text-center mb-4">
-                  <div className="inline-flex items-center justify-center w-12 h-12 rounded-full mb-2"
-                    style={{ backgroundColor: formData.themeColor, color: 'white' }}>
-                    <Heart className="w-6 h-6" />
-                  </div>
-                  <h4 className="text-lg font-bold text-gray-800">
-                    {formData.name || 'Pernikahan Anda'}
-                  </h4>
-                </div>
-                
-                <div className="space-y-3">
-                  <div className="flex items-center justify-center space-x-4">
-                    <div className="text-center">
-                      <div className="text-sm text-gray-500">Pengantin Wanita</div>
-                      <div className="font-semibold text-pink-600">{formData.brideName || 'Nama'}</div>
-                    </div>
-                    <div className="text-2xl text-gray-400">&</div>
-                    <div className="text-center">
-                      <div className="text-sm text-gray-500">Pengantin Pria</div>
-                      <div className="font-semibold text-blue-600">{formData.groomName || 'Nama'}</div>
-                    </div>
-                  </div>
-                  
-                  <div className="pt-4 border-t border-gray-100">
-                    <div className="flex items-center text-sm text-gray-600">
-                      <Calendar className="w-4 h-4 mr-2" />
-                      <span>
-                        {formData.date 
-                          ? new Date(formData.date).toLocaleDateString('id-ID', {
-                              weekday: 'long',
-                              day: 'numeric',
-                              month: 'long',
-                              year: 'numeric',
-                              hour: '2-digit',
-                              minute: '2-digit'
-                            })
-                          : 'Tanggal belum diatur'
-                        }
-                      </span>
-                    </div>
-                    <div className="flex items-center text-sm text-gray-600 mt-2">
-                      <MapPin className="w-4 h-4 mr-2" />
-                      <span className="truncate">
-                        {formData.location || 'Lokasi belum diatur'}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between">
-                <div className="flex items-center text-sm">
-                  <Users className="w-4 h-4 text-gray-400 mr-1" />
-                  <span>{formData.maxGuests} tamu</span>
-                </div>
-                <div className={`px-3 py-1 rounded-full text-xs font-medium ${
-                  formData.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                }`}>
-                  {formData.isActive ? 'Aktif' : 'Draft'}
-                </div>
-              </div>
-            </div>
-            
-            <div className="mt-4 text-center">
-              <p className="text-sm text-gray-500">
-                Tampilan ini akan muncul di halaman undangan digital
+            <div className="flex-1">
+              <p className="text-sm text-gray-600 mb-1">Preview Judul Undangan:</p>
+              <p className="text-2xl font-bold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
+                {currentFormData.weddingTitle || `The Wedding of ${currentFormData.groomName || '...'} & ${currentFormData.brideName || '...'}`}
+              </p>
+              <p className="text-xs text-gray-500 mt-2">
+                Judul akan otomatis dibuat dari nama pengantin
               </p>
             </div>
           </div>
         </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* Groom Section */}
+          <div className="bg-white rounded-2xl border-2 border-gray-200 overflow-hidden hover:border-pink-300 transition-all duration-300">
+            <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-5 border-b-2 border-blue-200">
+              <div className="flex items-center">
+                <div className="w-12 h-12 rounded-full bg-blue-500 flex items-center justify-center mr-4">
+                  <span className="text-white font-bold text-2xl">👨</span>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-blue-800 text-lg">Mempelai Pria</h3>
+                  <p className="text-sm text-blue-600">Data lengkap pengantin pria</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Nama Lengkap Pria <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={currentFormData.groomName || ''}
+                  onChange={(e) => handleChange('groomName', e.target.value)}
+                  className="w-full px-5 py-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg"
+                  placeholder="Contoh: Andi Pratama"
+                  required
+                />
+                <p className="text-xs text-gray-500 mt-2">Nama lengkap tanpa gelar (contoh: Andi Pratama)</p>
+              </div>
+              
+              <div className="bg-blue-50 p-4 rounded-xl">
+                <div className="flex items-center text-blue-700">
+                  <Info className="w-4 h-4 mr-2" />
+                  <span className="text-sm">Nama akan muncul di undangan dan sertifikat</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Bride Section */}
+          <div className="bg-white rounded-2xl border-2 border-gray-200 overflow-hidden hover:border-pink-300 transition-all duration-300">
+            <div className="bg-gradient-to-r from-pink-50 to-pink-100 p-5 border-b-2 border-pink-200">
+              <div className="flex items-center">
+                <div className="w-12 h-12 rounded-full bg-pink-500 flex items-center justify-center mr-4">
+                  <span className="text-white font-bold text-2xl">👩</span>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-pink-800 text-lg">Mempelai Wanita</h3>
+                  <p className="text-sm text-pink-600">Data lengkap pengantin wanita</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Nama Lengkap Wanita <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={currentFormData.brideName || ''}
+                  onChange={(e) => handleChange('brideName', e.target.value)}
+                  className="w-full px-5 py-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-pink-500 text-lg"
+                  placeholder="Contoh: Sari Wijaya"
+                  required
+                />
+                <p className="text-xs text-gray-500 mt-2">Nama lengkap tanpa gelar (contoh: Sari Wijaya)</p>
+              </div>
+              
+              <div className="bg-pink-50 p-4 rounded-xl">
+                <div className="flex items-center text-pink-700">
+                  <Heart className="w-4 h-4 mr-2" fill="currentColor" />
+                  <span className="text-sm">Nama akan dipadukan dengan mempelai pria</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Wedding Title - Optional */}
+          <div className="md:col-span-2">
+            <div className="bg-gradient-to-r from-gray-50 to-white p-6 rounded-xl border-2 border-gray-200">
+              <label className="block text-sm font-medium text-gray-700 mb-3">
+                Judul Undangan (Opsional)
+              </label>
+              <input
+                type="text"
+                value={currentFormData.weddingTitle || ''}
+                onChange={(e) => handleChange('weddingTitle', e.target.value)}
+                className="w-full px-5 py-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-pink-500 text-lg"
+                placeholder={`The Wedding of ${currentFormData.groomName || 'Andi'} & ${currentFormData.brideName || 'Sari'}`}
+              />
+              <p className="text-xs text-gray-500 mt-2">
+                Kosongkan untuk menggunakan judul otomatis. Maksimal 100 karakter.
+              </p>
+            </div>
+          </div>
+        </div>
+      </form>
+    )
+  }
+
+  // STEP 2: Date, Time & Venue
+  if (activeStep === 1) {
+    return (
+      <form onSubmit={(e) => { e.preventDefault(); onSubmit(currentFormData) }} className="space-y-8">
+        {/* Hero Section */}
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 p-8 mb-8">
+          <div className="relative text-center text-white">
+            <MapPin className="w-16 h-16 mx-auto mb-4" />
+            <h2 className="text-3xl font-bold mb-2">Tempat & Waktu</h2>
+            <p className="text-white/90 text-lg">Atur lokasi dan jadwal pernikahan Anda</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* Date & Time Section */}
+          <div className="md:col-span-2">
+            <DateTimePicker
+              dateValue={currentFormData.date}
+              startTimeValue={currentFormData.startTime}
+              endTimeValue={currentFormData.endTime}
+              onDateChange={(value) => handleChange('date', value)}
+              onStartTimeChange={(value) => handleChange('startTime', value)}
+              onEndTimeChange={(value) => handleChange('endTime', value)}
+            />
+          </div>
+
+          {/* Venue Name */}
+          <div>
+            <div className="bg-white rounded-2xl border-2 border-gray-200 p-6">
+              <label className="block text-sm font-medium text-gray-700 mb-3">
+                <Building className="w-4 h-4 inline mr-2 text-pink-600" />
+                Nama Venue <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={currentFormData.venueName || ''}
+                onChange={(e) => handleChange('venueName', e.target.value)}
+                className="w-full px-5 py-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-pink-500 text-lg"
+                placeholder="Contoh: Hotel Indonesia Kempinski"
+                required
+              />
+              <p className="text-xs text-gray-500 mt-2">Nama gedung/venue tempat acara</p>
+            </div>
+          </div>
+
+          {/* Venue Type */}
+          <div>
+            <div className="bg-white rounded-2xl border-2 border-gray-200 p-6">
+              <label className="block text-sm font-medium text-gray-700 mb-3">
+                Tipe Venue
+              </label>
+              <select
+                value={currentFormData.venueType || 'BALLROOM'}
+                onChange={(e) => handleChange('venueType', e.target.value)}
+                className="w-full px-5 py-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-pink-500 text-lg"
+              >
+                {VENUE_TYPES.map((type) => (
+                  <option key={type.value} value={type.value}>
+                    {type.icon} {type.label} - {type.description}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Address */}
+          <div className="md:col-span-2">
+            <div className="bg-white rounded-2xl border-2 border-gray-200 p-6">
+              <label className="block text-sm font-medium text-gray-700 mb-3">
+                <MapPin className="w-4 h-4 inline mr-2 text-pink-600" />
+                Alamat Lengkap
+              </label>
+              <textarea
+                value={currentFormData.address || ''}
+                onChange={(e) => handleChange('address', e.target.value)}
+                rows={3}
+                className="w-full px-5 py-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-pink-500 text-lg"
+                placeholder="Jl. M.H. Thamrin No.1, Jakarta Pusat"
+              />
+            </div>
+          </div>
+
+          {/* Google Maps URL */}
+          <div className="md:col-span-2">
+            <div className="bg-white rounded-2xl border-2 border-gray-200 p-6">
+              <label className="block text-sm font-medium text-gray-700 mb-3">
+                <Map className="w-4 h-4 inline mr-2 text-pink-600" />
+                Google Maps Link
+              </label>
+              <input
+                type="url"
+                value={currentFormData.googleMapsUrl || ''}
+                onChange={(e) => handleChange('googleMapsUrl', e.target.value)}
+                className="w-full px-5 py-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-pink-500 text-lg"
+                placeholder="https://maps.google.com/?q=..."
+              />
+              <p className="text-xs text-gray-500 mt-2">
+                Tamu akan diarahkan ke Google Maps untuk navigasi
+              </p>
+            </div>
+          </div>
+        </div>
+      </form>
+    )
+  }
+
+  // STEP 3: Theme & Features
+  if (activeStep === 2) {
+    return (
+      <form onSubmit={(e) => { e.preventDefault(); onSubmit(currentFormData) }} className="space-y-8">
+        {/* Hero Section */}
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-500 via-pink-500 to-rose-500 p-8 mb-8">
+          <div className="relative text-center text-white">
+            <Palette className="w-16 h-16 mx-auto mb-4" />
+            <h2 className="text-3xl font-bold mb-2">Tema & Fitur</h2>
+            <p className="text-white/90 text-lg">Personalisasi undangan Anda</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Left Column - Theme */}
+          <div className="space-y-8">
+            {/* Color Picker */}
+            <div className="bg-white rounded-2xl border-2 border-gray-200 p-6">
+              <ColorPicker
+                value={currentFormData.primaryColor}
+                onChange={(value) => handleChange('primaryColor', value)}
+              />
+            </div>
+
+            {/* Logo Upload */}
+            <div className="bg-white rounded-2xl border-2 border-gray-200 p-6">
+              <h3 className="font-semibold text-gray-800 mb-4 flex items-center">
+                <ImageIcon className="w-5 h-5 text-pink-500 mr-2" />
+                Logo Pasangan
+              </h3>
+              
+              <div className="flex items-center space-x-4">
+                {currentFormData.logoUrl ? (
+                  <div className="relative w-24 h-24 rounded-xl overflow-hidden border-3 border-pink-300 shadow-lg">
+                    <img src={currentFormData.logoUrl} alt="Logo" className="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => handleChange('logoUrl', '')}
+                      className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full text-sm flex items-center justify-center shadow-md"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ) : (
+                  <label className="w-24 h-24 rounded-xl border-3 border-dashed border-gray-300 flex flex-col items-center justify-center cursor-pointer hover:border-pink-500 hover:bg-pink-50 transition-all">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleImageUpload('logoUrl', e)}
+                      className="hidden"
+                    />
+                    <Upload className="w-8 h-8 text-gray-400 mb-2" />
+                    <span className="text-xs text-gray-500">Upload Logo</span>
+                  </label>
+                )}
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-gray-700">Logo/Inisial Pasangan</p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Format: JPG, PNG (Maks 2MB)<br/>
+                    Ukuran ideal: 200x200px
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Cover Image */}
+            <div className="bg-white rounded-2xl border-2 border-gray-200 p-6">
+              <h3 className="font-semibold text-gray-800 mb-4 flex items-center">
+                <Camera className="w-5 h-5 text-pink-500 mr-2" />
+                Foto Sampul
+              </h3>
+              
+              {currentFormData.coverImageUrl ? (
+                <div className="relative rounded-xl overflow-hidden border-3 border-pink-300 shadow-lg">
+                  <img src={currentFormData.coverImageUrl} alt="Cover" className="w-full h-48 object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => handleChange('coverImageUrl', '')}
+                    className="absolute top-2 right-2 w-8 h-8 bg-red-500 text-white rounded-full text-sm flex items-center justify-center shadow-md"
+                  >
+                    ×
+                  </button>
+                </div>
+              ) : (
+                <label className="relative block w-full h-48 rounded-xl border-3 border-dashed border-gray-300 cursor-pointer hover:border-pink-500 hover:bg-pink-50 transition-all">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleImageUpload('coverImageUrl', e)}
+                    className="hidden"
+                  />
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <Upload className="w-12 h-12 text-gray-400 mb-3" />
+                    <span className="text-sm font-medium text-gray-600">Upload Foto Sampul</span>
+                    <span className="text-xs text-gray-500 mt-2">Ukuran ideal: 1200x630px</span>
+                  </div>
+                </label>
+              )}
+            </div>
+          </div>
+
+          {/* Right Column - Access & Features */}
+          <div className="space-y-8">
+            {/* Access Settings */}
+            <div className="bg-white rounded-2xl border-2 border-gray-200 p-6">
+              <h3 className="font-semibold text-gray-800 mb-4 flex items-center">
+                <Lock className="w-5 h-5 text-pink-500 mr-2" />
+                Akses & Privasi
+              </h3>
+              
+              <div className="space-y-4">
+                {INVITATION_TYPES.map((type) => {
+                  const Icon = type.icon
+                  return (
+                    <label
+                      key={type.value}
+                      className={`
+                        relative flex items-start p-5 border-2 rounded-xl cursor-pointer
+                        transition-all duration-300 hover:scale-[1.02]
+                        ${currentFormData.invitationType === type.value
+                          ? 'border-pink-500 bg-pink-50 shadow-lg'
+                          : 'border-gray-200 hover:border-pink-300 hover:bg-pink-50/50'
+                        }
+                      `}
+                    >
+                      <input
+                        type="radio"
+                        name="invitationType"
+                        value={type.value}
+                        checked={currentFormData.invitationType === type.value}
+                        onChange={(e) => handleChange('invitationType', e.target.value)}
+                        className="sr-only"
+                      />
+                      <div className={`
+                        w-14 h-14 rounded-xl flex items-center justify-center mr-4
+                        ${currentFormData.invitationType === type.value
+                          ? 'bg-pink-500 text-white'
+                          : 'bg-gray-200 text-gray-600'
+                        }
+                      `}>
+                        <Icon className="w-7 h-7" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-semibold text-gray-800 text-lg">{type.label}</p>
+                        <p className="text-sm text-gray-600">{type.description}</p>
+                      </div>
+                      {currentFormData.invitationType === type.value && (
+                        <CheckCircle className="absolute top-4 right-4 w-6 h-6 text-pink-600" />
+                      )}
+                    </label>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* Wedding Features */}
+            <div className="bg-white rounded-2xl border-2 border-gray-200 p-6">
+              <h3 className="font-semibold text-gray-800 mb-4 flex items-center">
+                <Sparkles className="w-5 h-5 text-pink-500 mr-2" />
+                Fitur Undangan Digital
+              </h3>
+              
+              <div className="space-y-4">
+                {/* Photo on Check-in */}
+                <label className="flex items-center justify-between p-4 bg-white rounded-xl border-2 border-gray-200 cursor-pointer hover:border-pink-400 hover:bg-pink-50 transition-all">
+                  <div className="flex items-center">
+                    <div className={`
+                      w-14 h-14 rounded-xl flex items-center justify-center mr-4
+                      ${currentFormData.allowPhotoOnCheckIn ? 'bg-pink-100' : 'bg-gray-100'}
+                    `}>
+                      <Camera className={`
+                        w-7 h-7
+                        ${currentFormData.allowPhotoOnCheckIn ? 'text-pink-600' : 'text-gray-400'}
+                      `} />
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-800 text-base">Foto Saat Check-in</p>
+                      <p className="text-sm text-gray-500">Ambil foto tamu saat check-in</p>
+                    </div>
+                  </div>
+                  <div className="relative">
+                    <input
+                      type="checkbox"
+                      checked={currentFormData.allowPhotoOnCheckIn ?? true}
+                      onChange={(e) => handleChange('allowPhotoOnCheckIn', e.target.checked)}
+                      className="sr-only"
+                    />
+                    <div className={`
+                      w-14 h-7 rounded-full transition-colors duration-200
+                      ${currentFormData.allowPhotoOnCheckIn ? 'bg-pink-600' : 'bg-gray-300'}
+                    `}>
+                      <div className={`
+                        w-6 h-6 bg-white rounded-full shadow-md transform transition-transform duration-200
+                        ${currentFormData.allowPhotoOnCheckIn ? 'translate-x-7' : 'translate-x-1'}
+                      `} />
+                    </div>
+                  </div>
+                </label>
+
+                {/* Auto-send to WhatsApp */}
+                <label className="flex items-center justify-between p-4 bg-white rounded-xl border-2 border-gray-200 cursor-pointer hover:border-green-400 hover:bg-green-50 transition-all">
+                  <div className="flex items-center">
+                    <div className={`
+                      w-14 h-14 rounded-xl flex items-center justify-center mr-4
+                      ${currentFormData.autoSendPhotoToWA ? 'bg-green-100' : 'bg-gray-100'}
+                    `}>
+                      <Send className={`
+                        w-7 h-7
+                        ${currentFormData.autoSendPhotoToWA ? 'text-green-600' : 'text-gray-400'}
+                      `} />
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-800 text-base">Kirim Otomatis ke WhatsApp</p>
+                      <p className="text-sm text-gray-500">Foto langsung dikirim ke WA tamu</p>
+                    </div>
+                  </div>
+                  <div className="relative">
+                    <input
+                      type="checkbox"
+                      checked={currentFormData.autoSendPhotoToWA ?? true}
+                      onChange={(e) => handleChange('autoSendPhotoToWA', e.target.checked)}
+                      className="sr-only"
+                    />
+                    <div className={`
+                      w-14 h-7 rounded-full transition-colors duration-200
+                      ${currentFormData.autoSendPhotoToWA ? 'bg-green-600' : 'bg-gray-300'}
+                    `}>
+                      <div className={`
+                        w-6 h-6 bg-white rounded-full shadow-md transform transition-transform duration-200
+                        ${currentFormData.autoSendPhotoToWA ? 'translate-x-7' : 'translate-x-1'}
+                      `} />
+                    </div>
+                  </div>
+                </label>
+
+                {/* RSVP */}
+                <label className="flex items-center justify-between p-4 bg-white rounded-xl border-2 border-gray-200 cursor-pointer hover:border-purple-400 hover:bg-purple-50 transition-all">
+                  <div className="flex items-center">
+                    <div className={`
+                      w-14 h-14 rounded-xl flex items-center justify-center mr-4
+                      ${currentFormData.enableRSVP ? 'bg-purple-100' : 'bg-gray-100'}
+                    `}>
+                      <Users className={`
+                        w-7 h-7
+                        ${currentFormData.enableRSVP ? 'text-purple-600' : 'text-gray-400'}
+                      `} />
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-800 text-base">RSVP Online</p>
+                      <p className="text-sm text-gray-500">Tamu bisa konfirmasi kehadiran</p>
+                    </div>
+                  </div>
+                  <div className="relative">
+                    <input
+                      type="checkbox"
+                      checked={currentFormData.enableRSVP ?? true}
+                      onChange={(e) => handleChange('enableRSVP', e.target.checked)}
+                      className="sr-only"
+                    />
+                    <div className={`
+                      w-14 h-7 rounded-full transition-colors duration-200
+                      ${currentFormData.enableRSVP ? 'bg-purple-600' : 'bg-gray-300'}
+                    `}>
+                      <div className={`
+                        w-6 h-6 bg-white rounded-full shadow-md transform transition-transform duration-200
+                        ${currentFormData.enableRSVP ? 'translate-x-7' : 'translate-x-1'}
+                      `} />
+                    </div>
+                  </div>
+                </label>
+
+                {/* Live Count */}
+                <label className="flex items-center justify-between p-4 bg-white rounded-xl border-2 border-gray-200 cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-all">
+                  <div className="flex items-center">
+                    <div className={`
+                      w-14 h-14 rounded-xl flex items-center justify-center mr-4
+                      ${currentFormData.showLiveCount ? 'bg-blue-100' : 'bg-gray-100'}
+                    `}>
+                      <Users className={`
+                        w-7 h-7
+                        ${currentFormData.showLiveCount ? 'text-blue-600' : 'text-gray-400'}
+                      `} />
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-800 text-base">Live Counter</p>
+                      <p className="text-sm text-gray-500">Tampilkan jumlah tamu real-time</p>
+                    </div>
+                  </div>
+                  <div className="relative">
+                    <input
+                      type="checkbox"
+                      checked={currentFormData.showLiveCount ?? true}
+                      onChange={(e) => handleChange('showLiveCount', e.target.checked)}
+                      className="sr-only"
+                    />
+                    <div className={`
+                      w-14 h-7 rounded-full transition-colors duration-200
+                      ${currentFormData.showLiveCount ? 'bg-blue-600' : 'bg-gray-300'}
+                    `}>
+                      <div className={`
+                        w-6 h-6 bg-white rounded-full shadow-md transform transition-transform duration-200
+                        ${currentFormData.showLiveCount ? 'translate-x-7' : 'translate-x-1'}
+                      `} />
+                    </div>
+                  </div>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </form>
+    )
+  }
+
+  // STEP 4: Review & Publish
+  return (
+    <form onSubmit={(e) => { e.preventDefault(); onSubmit(currentFormData) }} className="space-y-8">
+      {/* Hero Section */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-500 via-pink-500 to-purple-600 p-8 mb-8">
+        <div className="relative text-center text-white">
+          <CheckCircle className="w-16 h-16 mx-auto mb-4" />
+          <h2 className="text-3xl font-bold mb-2">Review Undangan</h2>
+          <p className="text-white/90 text-lg">Periksa kembali data pernikahan Anda</p>
+        </div>
       </div>
+
+      {/* Wedding Card Preview */}
+      <div className="max-w-2xl mx-auto">
+        <div className="bg-white rounded-3xl shadow-2xl overflow-hidden border-4 border-pink-200">
+          {/* Cover Image */}
+          {currentFormData.coverImageUrl && (
+            <div className="h-56 overflow-hidden">
+              <img src={currentFormData.coverImageUrl} alt="Wedding Cover" className="w-full h-full object-cover" />
+            </div>
+          )}
+          
+          {/* Content */}
+          <div className="p-8 text-center relative">
+            {/* Decorative Elements */}
+            <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+              <div className="w-20 h-20 bg-gradient-to-br from-pink-500 to-purple-600 rounded-full flex items-center justify-center shadow-xl">
+                {currentFormData.logoUrl ? (
+                  <img src={currentFormData.logoUrl} alt="Logo" className="w-16 h-16 rounded-full object-cover border-4 border-white" />
+                ) : (
+                  <Heart className="w-10 h-10 text-white" fill="white" />
+                )}
+              </div>
+            </div>
+            
+            <div className="mt-12">
+              {/* Wedding Title */}
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent mb-4">
+                {currentFormData.weddingTitle || `The Wedding of ${currentFormData.groomName} & ${currentFormData.brideName}`}
+              </h1>
+              
+              {/* Couple Names */}
+              <div className="flex items-center justify-center space-x-6 mb-6">
+                <div className="text-right">
+                  <p className="text-2xl font-bold text-gray-800">{currentFormData.groomName}</p>
+                  <p className="text-sm text-gray-500">Putra dari Bpk. ... & Ibu ...</p>
+                </div>
+                <span className="text-pink-500 text-3xl">&</span>
+                <div className="text-left">
+                  <p className="text-2xl font-bold text-gray-800">{currentFormData.brideName}</p>
+                  <p className="text-sm text-gray-500">Putri dari Bpk. ... & Ibu ...</p>
+                </div>
+              </div>
+              
+              {/* Date & Time */}
+              <div className="bg-gradient-to-r from-pink-50 to-purple-50 p-5 rounded-xl mb-4">
+                <Calendar className="w-5 h-5 text-pink-600 inline mr-2" />
+                <span className="font-medium text-gray-800">
+                  {currentFormData.date ? new Date(currentFormData.date).toLocaleDateString('id-ID', { 
+                    weekday: 'long', 
+                    day: 'numeric', 
+                    month: 'long', 
+                    year: 'numeric' 
+                  }) : '-'}
+                </span>
+                <br />
+                <Clock className="w-5 h-5 text-pink-600 inline mr-2" />
+                <span className="font-medium text-gray-800">
+                  {currentFormData.startTime || '-'} - {currentFormData.endTime || '-'} WIB
+                </span>
+              </div>
+              
+              {/* Venue */}
+              <div className="bg-white p-5 rounded-xl border-2 border-gray-200">
+                <MapPin className="w-5 h-5 text-pink-600 inline mr-2" />
+                <span className="font-medium text-gray-800">{currentFormData.venueName || '-'}</span>
+                <p className="text-sm text-gray-600 mt-1">{currentFormData.address || '-'}</p>
+                {currentFormData.googleMapsUrl && (
+                  <a href={currentFormData.googleMapsUrl} target="_blank" rel="noopener noreferrer" 
+                     className="inline-flex items-center mt-3 text-sm text-pink-600 hover:text-pink-700 font-medium">
+                    <Map className="w-4 h-4 mr-1" />
+                    Buka Google Maps
+                  </a>
+                )}
+              </div>
+              
+              {/* Features */}
+              <div className="mt-6 flex flex-wrap gap-2 justify-center">
+                {currentFormData.allowPhotoOnCheckIn && (
+                  <span className="px-4 py-2 bg-pink-100 text-pink-700 rounded-full text-xs flex items-center">
+                    <Camera className="w-3 h-3 mr-1" /> Foto Check-in
+                  </span>
+                )}
+                {currentFormData.autoSendPhotoToWA && (
+                  <span className="px-4 py-2 bg-green-100 text-green-700 rounded-full text-xs flex items-center">
+                    <Send className="w-3 h-3 mr-1" /> Auto WA
+                  </span>
+                )}
+                {currentFormData.enableRSVP && (
+                  <span className="px-4 py-2 bg-purple-100 text-purple-700 rounded-full text-xs flex items-center">
+                    <Users className="w-3 h-3 mr-1" /> RSVP
+                  </span>
+                )}
+                {currentFormData.showLiveCount && (
+                  <span className="px-4 py-2 bg-blue-100 text-blue-700 rounded-full text-xs flex items-center">
+                    <Users className="w-3 h-3 mr-1" /> Live Counter
+                  </span>
+                )}
+                <span className="px-4 py-2 bg-gray-100 text-gray-700 rounded-full text-xs flex items-center">
+                  {currentFormData.invitationType === 'PUBLIC' ? 
+                    <Globe className="w-3 h-3 mr-1" /> : 
+                    <Lock className="w-3 h-3 mr-1" />
+                  }
+                  {currentFormData.invitationType === 'PUBLIC' ? 'Publik' : 'Privat'}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Color Theme Preview */}
+      <div className="flex items-center justify-center space-x-4 mt-4">
+        <div className="flex items-center">
+          <div className="w-6 h-6 rounded-full" style={{ backgroundColor: currentFormData.primaryColor }}></div>
+          <span className="ml-2 text-sm text-gray-600">Warna Tema</span>
+        </div>
+        <div className="text-sm text-gray-500">
+          {currentFormData.shortCode && (
+            <>Kode Undangan: <span className="font-mono bg-gray-100 px-2 py-1 rounded">{currentFormData.shortCode}</span></>
+          )}
+        </div>
+      </div>
+
+      {/* Submit Button sudah di-handle oleh FormActions */}
     </form>
   )
 }
