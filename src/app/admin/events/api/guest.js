@@ -105,6 +105,22 @@ export const guestApi = {
     }
   },
 
+  // GET /api/guests/event/:slug - Get single guest
+  async getEventGuest(slug) {
+    try {
+      const res = await fetch(`${API_URL}/guests/event/${slug}`, {
+        credentials: 'include',
+        cache: 'no-store'
+      })
+
+      const responseData = await res.json()
+      return responseData.data || responseData
+    } catch (error) {
+      console.error('Error fetching guest:', error)
+      throw error
+    }
+  },
+
   // GET /api/guests/by-code/:code - Get guest by invitation code
   async getGuestByCode(code) {
     try {
@@ -201,6 +217,7 @@ export const guestApi = {
   // PUT /api/guests/:id - Update guest
   async updateGuest(id, guestData) {
     try {
+    
       const res = await fetch(`${API_URL}/guests/${id}`, {
         method: 'PUT',
         credentials: 'include',

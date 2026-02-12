@@ -3,7 +3,10 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Heart } from 'lucide-react'
+import { ArrowLeft, Heart, Users, UserCog } from 'lucide-react'
+
+// API
+
 // Components
 import LoadingSkeleton from './components/LoadingSkeleton'
 import WeddingHero from './components/WeddingHero'
@@ -13,12 +16,14 @@ import WeddingStats from './components/WeddingStats'
 import ThemePreview from './components/ThemePreview'
 import WeddingFeatures from './components/WeddingFeatures'
 import ActionButtons from './components/ActionButtons'
-import GuestTabs from './components/GuestTabs'
+import GuestManagement from './components/guests/GuestManagment'
+import StaffManagement from './components/staff/StaffManagment'
 import { eventsApi } from '../api/events'
 
 export default function WeddingDetailPage() {
   const params = useParams()
   const slug = params.slug
+  const [activeTab, setActiveTab] = useState('guests') // 'guests' or 'staff'
 
   const [wedding, setWedding] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -72,7 +77,7 @@ export default function WeddingDetailPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 via-white to-purple-50">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-30 shadow-sm">
+      <div className="bg-white border-b border-gray-200 top-0 z-30 shadow-sm">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
@@ -113,13 +118,63 @@ export default function WeddingDetailPage() {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-6 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 gap-8">
           {/* Left Column - Main Info */}
           <div className="lg:col-span-2 space-y-6">
             <CoupleInfo wedding={wedding} />
             <DateTimeVenue wedding={wedding} />
-            <WeddingStats wedding={wedding} />
-            <GuestTabs wedding={wedding} />
+            
+            {/* Tabs untuk Guest & Staff Management */}
+            <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+              <div className="border-b border-gray-200">
+                <div className="flex">
+                  <button
+                    onClick={() => setActiveTab('guests')}
+                    className={`
+                      flex-1 px-6 py-4 text-sm font-medium transition-all relative
+                      ${activeTab === 'guests'
+                        ? 'text-pink-600 border-b-2 border-pink-600'
+                        : 'text-gray-500 hover:text-gray-700'
+                      }
+                    `}
+                  >
+                    <div className="flex items-center justify-center">
+                      <Users className="w-4 h-4 mr-2" />
+                      Manajemen Tamu
+                      <span className="ml-2 px-2 py-0.5 bg-pink-100 text-pink-700 rounded-full text-xs">
+                        {wedding._count?.guests || 0}
+                      </span>
+                    </div>
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('staff')}
+                    className={`
+                      flex-1 px-6 py-4 text-sm font-medium transition-all relative
+                      ${activeTab === 'staff'
+                        ? 'text-purple-600 border-b-2 border-purple-600'
+                        : 'text-gray-500 hover:text-gray-700'
+                      }
+                    `}
+                  >
+                    <div className="flex items-center justify-center">
+                      <UserCog className="w-4 h-4 mr-2" />
+                      Manajemen Staff
+                      <span className="ml-2 px-2 py-0.5 bg-purple-100 text-purple-700 rounded-full text-xs">
+                        3
+                      </span>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+              <div className="p-6">
+                {activeTab === 'guests' ? (
+                  <GuestManagement eventId={wedding.id} wedding={wedding} eventSlug={wedding.slug} />
+                ) : (
+                  <StaffManagement eventId={wedding.id} wedding={wedding} />
+                )}
+              </div>
+            </div>
           </div>
 
           {/* Right Column - Sidebar */}
@@ -128,6 +183,7 @@ export default function WeddingDetailPage() {
               wedding={wedding} 
               onUpdate={fetchWeddingDetail} 
             />
+            <WeddingStats wedding={wedding} />
             <ThemePreview wedding={wedding} />
             <WeddingFeatures wedding={wedding} />
           </div>

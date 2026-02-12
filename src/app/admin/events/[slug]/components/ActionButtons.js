@@ -57,7 +57,7 @@ export default function ActionButtons({ wedding, onUpdate }) {
 
   return (
     <>
-      <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden sticky top-24">
+      <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden top-24">
         <div className="bg-gradient-to-r from-gray-700 to-gray-800 p-5">
           <h3 className="text-white font-semibold flex items-center">
             <MoreVertical className="w-5 h-5 mr-2" />
