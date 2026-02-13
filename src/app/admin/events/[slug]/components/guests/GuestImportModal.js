@@ -38,7 +38,7 @@ export default function GuestImportModal({ isOpen, onClose, onImport }) {
         <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
           <div>
             <h3 className="text-lg font-semibold text-gray-800">Import Tamu</h3>
-            <p className="text-sm text-gray-500">Upload file Excel/CSV daftar tamu</p>
+            <p className="text-sm text-gray-500">Upload file CSV daftar tamu</p>
           </div>
           <button
             onClick={onClose}
