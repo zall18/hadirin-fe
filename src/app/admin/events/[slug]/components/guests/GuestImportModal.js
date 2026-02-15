@@ -60,7 +60,7 @@ export default function GuestImportModal({ isOpen, onClose, onImport }) {
                 </p>
                 <button className="inline-flex items-center px-4 py-2 bg-white border border-blue-300 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors text-sm">
                   <Download className="w-4 h-4 mr-2" />
-                  Download Template
+                  Download Template CSV
                 </button>
               </div>
             </div>
