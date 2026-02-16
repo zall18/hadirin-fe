@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Users, UserPlus } from 'lucide-react'
 import StaffTable from './StaffTable'
 import StaffFormModal from './StaffFormModal'
+import { usersApi } from '../../../api/user'
 
 export default function StaffManagement({ eventId, wedding }) {
   const [staff, setStaff] = useState([])
@@ -18,41 +19,10 @@ export default function StaffManagement({ eventId, wedding }) {
   const fetchStaff = async () => {
     setLoading(true)
     try {
-      // Simulasi data staff
-      const dummyStaff = [
-        {
-          id: 1,
-          name: 'Admin Wedding',
-          email: 'admin@hadirin.com',
-          phone: '08123456789',
-          role: 'ADMIN',
-          lastLoginAt: '2026-02-11T08:30:00Z',
-          isActive: true,
-          avatarUrl: null
-        },
-        {
-          id: 2,
-          name: 'Staff Check-in',
-          email: 'staff1@hadirin.com',
-          phone: '08129876543',
-          role: 'STAFF',
-          lastLoginAt: '2026-02-10T14:20:00Z',
-          isActive: true,
-          avatarUrl: null
-        },
-        {
-          id: 3,
-          name: 'Staff Foto',
-          email: 'staff2@hadirin.com',
-          phone: '08131234567',
-          role: 'STAFF',
-          lastLoginAt: null,
-          isActive: false,
-          avatarUrl: null
-        }
-      ]
-
-      setStaff(dummyStaff)
+      const response = await usersApi.getStaff(eventId);
+      const data = response.data;
+      
+      setStaff(data);
     } catch (error) {
       console.error('Error fetching staff:', error)
     } finally {
@@ -61,9 +31,11 @@ export default function StaffManagement({ eventId, wedding }) {
   }
 
   const handleAddStaff = async (data) => {
-    console.log('Add staff:', data)
-    setShowFormModal(false)
-    fetchStaff()
+    const response = await usersApi.createUser(data);
+    if(response.status == 201) {
+      setShowFormModal(false)
+      fetchStaff()
+    }
   }
 
   const handleEditStaff = (staff) => {
@@ -71,17 +43,24 @@ export default function StaffManagement({ eventId, wedding }) {
     setShowFormModal(true)
   }
 
-  const handleUpdateStaff = async (data) => {
-    console.log('Update staff:', data)
-    setShowFormModal(false)
-    setEditingStaff(null)
-    fetchStaff()
+  const handleUpdateStaff = async (data, id) => {
+    const response = await usersApi.updateUser(id, data)
+    console.log(response.data);
+    if(response.status == 200) {
+      setShowFormModal(false)
+      setEditingStaff(null)
+      fetchStaff()
+    }
+
   }
 
   const handleDeleteStaff = async (staff) => {
     if (confirm(`Hapus staff ${staff.name}?`)) {
-      console.log('Delete staff:', staff)
-      fetchStaff()
+      const response = await usersApi.deleteUser(staff.id);
+      if(response.status == 200 ) {
+        fetchStaff()
+
+      }
     }
   }
 
@@ -130,6 +109,8 @@ export default function StaffManagement({ eventId, wedding }) {
         }}
         onSubmit={editingStaff ? handleUpdateStaff : handleAddStaff}
         staff={editingStaff}
+        eventId={eventId}
+        key={editingStaff?.id || 'new'}
       />
     </div>
   )

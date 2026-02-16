@@ -128,6 +128,7 @@ export const eventsApi = {
       }
 
       const responseData = await res.json()
+      console.log(responseData.data);
       return responseData.data || responseData.event || null
     } catch (error) {
       console.error(`❌ Error fetching event ${identifier}:`, error)

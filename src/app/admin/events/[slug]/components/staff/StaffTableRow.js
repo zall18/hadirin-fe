@@ -6,6 +6,7 @@ import StaffRoleBadge from './StaffRoleBadge'
 
 export default function StaffTableRow({ staff, onEdit, onDelete, onUpdateRole }) {
   const [showMenu, setShowMenu] = useState(false)
+  console.log("Data Staff : " + staff);
 
   const getInitials = (name) => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
@@ -89,7 +90,7 @@ export default function StaffTableRow({ staff, onEdit, onDelete, onUpdateRole })
             className="p-1.5 rounded-lg text-blue-600 hover:bg-blue-50 transition-colors"
             title="Edit"
           >
-            <Edit2 className="w-4 h-4" />
+            <Edit2 className="w-4 h-4"  />
           </button>
           
           <button

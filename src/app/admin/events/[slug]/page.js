@@ -160,7 +160,7 @@ export default function WeddingDetailPage() {
                       <UserCog className="w-4 h-4 mr-2" />
                       Manajemen Staff
                       <span className="ml-2 px-2 py-0.5 bg-purple-100 text-purple-700 rounded-full text-xs">
-                        3
+                        {wedding._count?.users || 0}
                       </span>
                     </div>
                   </button>
