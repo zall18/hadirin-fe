@@ -136,6 +136,9 @@ export const usersApi = {
 
       const responseData = await res.json();
       console.log(responseData);
+
+
+      
       return {
         status: res.status,
         data: responseData.data,
