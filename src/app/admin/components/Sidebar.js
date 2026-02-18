@@ -308,6 +308,9 @@ export default function Sidebar() {
         </nav>
 
         {/* Logout Button dengan Design Lebih Baik */}
+
+
+        
         <div className="p-5 border-t border-gray-100 bg-gradient-to-r from-gray-50 to-white">
           <button className="group w-full flex items-center justify-center p-4 rounded-xl bg-gradient-to-r from-white to-gray-50 border border-gray-200 hover:border-red-200 hover:from-red-50 hover:to-red-50/50 transition-all duration-300 shadow-sm hover:shadow-md">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-red-50 to-red-100 group-hover:from-red-100 group-hover:to-red-200 flex items-center justify-center mr-4 transition-all duration-300">
