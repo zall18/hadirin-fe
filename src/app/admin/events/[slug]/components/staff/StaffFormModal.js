@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { X, Mail, User, Phone, Shield, UserCog, User as UserIcon, Key, Eye, EyeOff } from 'lucide-react'
+import { UserRole, ROLE_LABELS, ROLE_DESCRIPTIONS } from '../../../../../../lib/constants'
 
 export default function StaffFormModal({ isOpen, onClose, onSubmit, staff = null, eventId }) {
   const [showPassword, setShowPassword] = useState(false)
@@ -42,19 +43,19 @@ export default function StaffFormModal({ isOpen, onClose, onSubmit, staff = null
 
   const roles = [
     { 
-      value: 'ADMIN', 
-      label: 'Admin', 
+      value: UserRole.ADMIN, 
+      label: ROLE_LABELS[UserRole.ADMIN], 
       icon: UserCog,
-      description: 'Full access - bisa manage tamu & staff',
+      description: ROLE_DESCRIPTIONS[UserRole.ADMIN],
       color: 'blue',
       bgColor: 'bg-blue-500',
       lightBg: 'bg-blue-50'
     },
     { 
-      value: 'STAFF', 
-      label: 'Staff', 
+      value: UserRole.STAFF, 
+      label: ROLE_LABELS[UserRole.STAFF], 
       icon: UserIcon,
-      description: 'Check-in & foto tamu',
+      description: ROLE_DESCRIPTIONS[UserRole.STAFF],
       color: 'gray',
       bgColor: 'bg-gray-500',
       lightBg: 'bg-gray-50'

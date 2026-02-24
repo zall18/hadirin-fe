@@ -1,24 +1,25 @@
 'use client'
 
 import { Shield, UserCog, User } from 'lucide-react'
+import { UserRole, ROLE_LABELS } from '../../../../../../lib/constants'
 
 const roleConfig = {
-  SUPER_ADMIN: {
-    label: 'Super Admin',
+  [UserRole.SUPER_ADMIN]: {
+    label: ROLE_LABELS[UserRole.SUPER_ADMIN],
     icon: Shield,
     bgColor: 'bg-purple-100',
     textColor: 'text-purple-700',
     borderColor: 'border-purple-200'
   },
-  ADMIN: {
-    label: 'Admin',
+  [UserRole.ADMIN]: {
+    label: ROLE_LABELS[UserRole.ADMIN],
     icon: UserCog,
     bgColor: 'bg-blue-100',
     textColor: 'text-blue-700',
     borderColor: 'border-blue-200'
   },
-  STAFF: {
-    label: 'Staff',
+  [UserRole.STAFF]: {
+    label: ROLE_LABELS[UserRole.STAFF],
     icon: User,
     bgColor: 'bg-gray-100',
     textColor: 'text-gray-700',
@@ -27,7 +28,7 @@ const roleConfig = {
 }
 
 export default function StaffRoleBadge({ role }) {
-  const config = roleConfig[role] || roleConfig.STAFF
+  const config = roleConfig[role] || roleConfig[UserRole.STAFF]
   const Icon = config.icon
 
   return (

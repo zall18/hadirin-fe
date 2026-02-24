@@ -8,7 +8,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 
-import { eventsApi } from '../../api/events'
+import { eventsApi } from '../../../api/events'
 
 export default function ActionButtons({ wedding, onUpdate }) {
   const [loading, setLoading] = useState({
