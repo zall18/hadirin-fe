@@ -9,6 +9,7 @@ import GuestFormModal from './GuestFormModal'
 import GuestImportModal from './GuestImportModal'
 import GuestBulkActions from './GuestBulkActions'
 import { guestApi } from '../../../api/guest'
+import GuestQRModal from './GuestQRModal'
 
 export default function GuestManagement({ eventId, eventSlug, wedding }) {
   const [guests, setGuests] = useState([])
@@ -23,6 +24,13 @@ export default function GuestManagement({ eventId, eventSlug, wedding }) {
   const [showFormModal, setShowFormModal] = useState(false)
   const [showImportModal, setShowImportModal] = useState(false)
   const [editingGuest, setEditingGuest] = useState(null)
+    const [showQRModal, setShowQRModal] = useState(false)
+  const [selectedGuestForQR, setSelectedGuestForQR] = useState(null)
+
+  const handleShowQR = (guest) => {
+    setSelectedGuestForQR(guest)
+    setShowQRModal(true)
+  }
 
   // Fetch guests
   useEffect(() => {
@@ -107,8 +115,11 @@ export default function GuestManagement({ eventId, eventSlug, wedding }) {
     setSelectedGuests([])
   }
 
-  const handleBulkSendWA = async () => {
-    console.log('Bulk send WA:', selectedGuests)
+  const handleUpdateStatus = async (shortId) => {
+    const response = await guestApi.guestConfirmed(shortId);
+    if(response.status) {
+        fetchGuests()
+    }
   }
 
   const handleBulkCheckin = async () => {
@@ -179,10 +190,19 @@ export default function GuestManagement({ eventId, eventSlug, wedding }) {
           onEdit={handleEditGuest}
           onDelete={handleDeleteGuest}
           onCheckin={handleCheckin}
-          onSendWA={handleSendWA}
+          onUpdateGuest={handleUpdateStatus}
           onAdd={() => setShowFormModal(true)}
+          onShowQr={handleShowQR}
           onImport={() => setShowImportModal(true)}
           onExport={handleExport}
+        />
+        <GuestQRModal
+          isOpen={showQRModal}
+          onClose={() => {
+            setShowQRModal(false)
+            setSelectedGuestForQR(null)
+          }}
+          guest={selectedGuestForQR}
         />
 
         <GuestBulkActions
@@ -190,8 +210,9 @@ export default function GuestManagement({ eventId, eventSlug, wedding }) {
           onSelectAll={handleSelectAll}
           onClearAll={handleClearAll}
           onBulkDelete={handleBulkDelete}
-          onBulkSendWA={handleBulkSendWA}
+          onUpdateStatus={handleUpdateGuest}
           onBulkCheckin={handleBulkCheckin}
+          
         />
       </div>
 
@@ -212,6 +233,7 @@ export default function GuestManagement({ eventId, eventSlug, wedding }) {
         isOpen={showImportModal}
         onClose={() => setShowImportModal(false)}
         onImport={handleImport}
+        eventId={eventId}
       />
     </div>
   )

@@ -9,9 +9,10 @@ export default function GuestTable({
   onEdit,
   onDelete,
   onCheckin,
-  onSendWA,
+  onUpdateGuest,
   onAdd,
   onImport,
+  onShowQr,
   onExport
 }) {
 
@@ -94,7 +95,9 @@ export default function GuestTable({
                 onEdit={onEdit}
                 onDelete={onDelete}
                 onCheckin={onCheckin}
-                onSendWA={onSendWA}
+                onUpdateGuest={onUpdateGuest}
+                shortId={guest.shortId}
+                onShowQR={onShowQr}
               />
             ))}
           </tbody>

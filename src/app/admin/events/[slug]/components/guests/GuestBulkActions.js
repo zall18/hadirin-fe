@@ -1,14 +1,14 @@
 'use client'
 
 import { useState } from 'react'
-import { Trash2, Send, CheckSquare, XSquare } from 'lucide-react'
+import { Trash2, Send, CheckSquare, XSquare, CircleCheckBig } from 'lucide-react'
 
 export default function GuestBulkActions({
   selectedCount = 0,
   onSelectAll,
   onClearAll,
   onBulkDelete,
-  onBulkSendWA,
+  onUpdateStatus,
   onBulkCheckin
 }) {
   const [showConfirm, setShowConfirm] = useState(false)
@@ -26,8 +26,8 @@ export default function GuestBulkActions({
       case 'delete':
         onBulkDelete()
         break
-      case 'sendWA':
-        onBulkSendWA()
+      case 'confirm':
+        onUpdateStatus()
         break
       case 'checkin':
         onBulkCheckin()
@@ -73,11 +73,11 @@ export default function GuestBulkActions({
           </button>
           
           <button
-            onClick={() => handleAction('sendWA')}
+            onClick={() => handleAction('confirm')}
             className="px-4 py-1.5 bg-blue-500 hover:bg-blue-600 text-white text-xs font-medium rounded-lg transition-colors"
           >
-            <Send className="w-4 h-4 inline mr-1" />
-            Kirim WA
+            <CircleCheckBig className="w-4 h-4 inline mr-1" />
+            Konfirmasi Kehadiran
           </button>
           
           <button

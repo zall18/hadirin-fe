@@ -5,7 +5,8 @@ import {
   Phone, Mail, Users, QrCode,
   CheckCircle, XCircle, Clock,
   Edit2, Trash2, Camera, Send,
-  MoreVertical, UserCheck, UserX
+  MoreVertical, UserCheck, UserX, 
+  CircleCheckBig
 } from 'lucide-react'
 
 const statusConfig = {
@@ -41,7 +42,7 @@ const statusConfig = {
   }
 }
 
-export default function GuestTableRow({ guest, onEdit, onDelete, onCheckin, onSendWA }) {
+export default function GuestTableRow({ guest, onEdit, onDelete, onCheckin, onUpdateGuest, shortId, onShowQR }) {
   const [showMenu, setShowMenu] = useState(false)
   const Status = statusConfig[guest.status] || statusConfig.INVITED
   const StatusIcon = Status.icon
@@ -150,11 +151,11 @@ export default function GuestTableRow({ guest, onEdit, onDelete, onCheckin, onSe
           </button>
           
           <button
-            onClick={() => onSendWA?.(guest)}
+            onClick={() => onUpdateGuest(shortId)}
             className="p-1.5 rounded-lg text-green-600 hover:bg-green-50 transition-colors"
-            title="Kirim WhatsApp"
+            title="Confirmed Guest"
           >
-            <Send className="w-4 h-4" />
+            <CircleCheckBig className="w-4 h-4" />
           </button>
           
           <button
@@ -183,9 +184,12 @@ export default function GuestTableRow({ guest, onEdit, onDelete, onCheckin, onSe
             
             {showMenu && (
               <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10">
-                <button className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50">
-                  <QrCode className="w-4 h-4 inline mr-2" />
-                  Lihat QR Code
+                <button
+                  onClick={() => onShowQR?.(guest)}
+                  className="p-1.5 rounded-lg text-purple-600 hover:bg-purple-50 transition-colors"
+                  title="Lihat QR Code"
+                >
+                  <QrCode className="w-4 h-4" />
                 </button>
                 <button className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50">
                   Lihat History

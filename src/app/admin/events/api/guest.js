@@ -185,6 +185,29 @@ export const guestApi = {
     }
   },
 
+  async guestConfirmed(shortId) {
+    try {
+      const res = await fetch(`${API_URL}/guests/${shortId}/confirm`, {
+        method : "GET",
+        credentials : 'include',
+        cache : 'no-store',
+        headers : {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const responseData = res.json();
+      return {
+        status: res.status,
+        data: responseData.data,
+        message: responseData.message,
+      }
+    } catch(error) {
+      console.error('Error bulk creating guests:', error)
+      throw error
+    }
+  },
+
   // POST /api/guests/bulk - Bulk create guests
   async bulkCreateGuests(eventId, guestsData) {
     try {
@@ -212,6 +235,66 @@ export const guestApi = {
       console.error('Error bulk creating guests:', error)
       throw error
     }
+  },
+
+  // services/guestService.js (tambahkan method ini)
+
+  // POST /api/guests/import - Import guests from CSV
+  async importGuestsFromCSV(eventId, file) {
+      try {
+          const formData = new FormData();
+          formData.append('eventId', eventId);
+          formData.append('file', file);
+
+          const res = await fetch(`${API_URL}/guests/import`, {
+              method: 'POST',
+              credentials: 'include',
+              body: formData
+              // Jangan set Content-Type! Browser akan set otomatis dengan boundary
+          });
+
+          const responseData = await res.json();
+          
+          return {
+              status: res.status,
+              data: responseData.data,
+              message: responseData.msg,
+              errors: responseData.errors
+          };
+      } catch (error) {
+          console.error('Error importing guests:', error);
+          throw error;
+      }
+  },
+
+  // GET /api/guests/template - Download CSV template
+  async downloadCSVTemplate() {
+      try {
+          const res = await fetch(`${API_URL}/guests/template`, {
+              method: 'GET',
+              credentials: 'include'
+          });
+
+          if (res.ok) {
+              const blob = await res.blob();
+              const url = window.URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = 'guest-template.csv';
+              document.body.appendChild(a);
+              a.click();
+              window.URL.revokeObjectURL(url);
+              document.body.removeChild(a);
+          }
+
+          return {
+              status: res.status,
+              ok: res.ok
+          };
+      } catch (error) {
+          console.error('Error downloading template:', error);
+          throw error;
+      }
   },
 
   // PUT /api/guests/:id - Update guest
